@@ -1,58 +1,29 @@
-let currentCount = 0;
+const express = require("express");
 
-function animateCount(newCount) {
-    const element = document.getElementById("subscriberCount");
+const app = express();
+const PORT = 3000;
 
-    const start = currentCount;
-    const difference = newCount - start;
-    const duration = 1500;
-    const startTime = performance.now();
+// Serve files from public folder
+app.use(express.static("public"));
 
-    function update(time) {
-        const progress = Math.min((time - startTime) / duration, 1);
-
-        // Smooth easing
-        const eased = 1 - Math.pow(1 - progress, 3);
-
-        const value = Math.floor(start + difference * eased);
-
-        element.textContent = value.toLocaleString();
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            currentCount = newCount;
-        }
-    }
-
-    requestAnimationFrame(update);
-}
-
-async function updateSubscribers() {
+// Subscriber API
+app.get("/api/subscribers", async (req, res) => {
     try {
-        const response = await fetch("/api/subscribers");
+        // Temporary test value
+        const subscribers = 520000000;
 
-        if (!response.ok) {
-            throw new Error("API request failed");
-        }
-
-        const data = await response.json();
-
-        if (data.subscribers !== undefined) {
-            const newCount = Number(data.subscribers);
-
-            if (!Number.isNaN(newCount)) {
-                animateCount(newCount);
-            }
-        }
-
+        res.json({
+            subscribers
+        });
     } catch (error) {
-        console.error("Subscriber update failed:", error);
+        console.error("Subscriber API failed:", error);
+
+        res.status(500).json({
+            error: "Failed to get subscribers"
+        });
     }
-}
+});
 
-// Initial update
-updateSubscribers();
-
-// Check YouTube every 60 seconds
-setInterval(updateSubscribers, 60000);
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
